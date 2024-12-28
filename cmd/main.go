@@ -1,8 +1,8 @@
-package main
+package cmd
 
 import (
-	"chx_passport/api"
-	"chx_passport/setup"
+	"chx-passport/api"
+	"chx-passport/setup"
 )
 
 func main() {

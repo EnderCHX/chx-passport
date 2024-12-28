@@ -1,8 +1,8 @@
 package database
 
 import (
-	"chx_passport/config"
-	"chx_passport/user"
+	"chx-passport/config"
+	"context"
 	"errors"
 	"log"
 
@@ -18,7 +18,7 @@ var (
 	Dsn   string
 )
 
-func Init() {
+func InitDB() {
 	Dsn = config.ConfigContext.MySQLConfig.Username + ":" +
 		config.ConfigContext.MySQLConfig.Password +
 		"@tcp(" + config.ConfigContext.MySQLConfig.Host + ":" +
@@ -31,65 +31,28 @@ func Init() {
 	if err != nil {
 		var mysqlErr *mysqlError.MySQLError
 		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1049 { //数据库不存在，创建数据库
-			log.Println("数据库" + config.ConfigContext.MySQLConfig.DBName + "不存在，创建数据库")
-			createMySQL, err := gorm.Open(mysql.Open(config.ConfigContext.MySQLConfig.Username+":"+
-				config.ConfigContext.MySQLConfig.Password+"@tcp("+config.ConfigContext.MySQLConfig.Host+":"+
-				config.ConfigContext.MySQLConfig.Port+")/?charset=utf8mb4&parseTime=True&loc=Local"), &gorm.Config{})
-			//连接数据库，不带数据库名
-			if err != nil {
-				log.Println(err)
-			}
-
-			err = createMySQL.Exec("CREATE DATABASE IF NOT EXISTS " + config.ConfigContext.MySQLConfig.DBName).Error
-			//创建数据库
-			if err != nil {
-				log.Println(err)
-			}
-
-			err = createMySQL.AutoMigrate(&user.User{})
-			//创建表
-			if err != nil {
-				log.Println(err)
-			}
-			closeDB, _ := createMySQL.DB()
-			closeDB.Close()
-			//关闭数据库连接
-
-			log.Println("数据库" + config.ConfigContext.MySQLConfig.DBName + "创建成功，重新连接数据库") //重试连接数据库
-			MySQL, err = gorm.Open(mysql.Open(Dsn), &gorm.Config{})
-			if err != nil {
-				log.Println(err)
-			}
-			log.Println("数据库连接成功")
-		} else {
-			log.Println(err)
-			return
+			panic("数据库" + config.ConfigContext.MySQLConfig.DBName + "不存在，请手动创建数据库")
 		}
+		panic(err)
 	}
 	log.Println("数据库连接成功")
 
-	err = MySQL.AutoMigrate(&user.User{})
-	//创建表
-	if err != nil {
-		log.Println(err)
-	}
-
-	closeMySQL, err := MySQL.DB()
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	defer closeMySQL.Close() //关闭数据库连接
+	// err = MySQL.AutoMigrate(&models.ModelsList.User)
+	// //创建表
+	// if err != nil {
+	// 	log.Println(err)
+	// }
 
 	Rdb = redis.NewClient(&redis.Options{
 		Addr:     config.ConfigContext.RedisConfig.Host + ":" + config.ConfigContext.RedisConfig.Port,
 		Password: config.ConfigContext.RedisConfig.Password,
 		DB:       config.ConfigContext.RedisConfig.DB,
 	})
-	log.Println("Redis连接成功")
-	defer Rdb.Close() //关闭redis连接
-}
-
-func CreateUser(u *user.User) error {
-	return MySQL.Create(u).Error
+	ctx := context.Background()
+	pong, err := Rdb.Ping(ctx).Result()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	log.Println("Redis连接成功", pong)
 }

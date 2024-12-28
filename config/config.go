@@ -32,6 +32,8 @@ type Config struct {
 	MySQLConfig MySQL     `json:"mysql_config"`
 	RedisConfig Redis     `json:"redis_config"`
 	ApiConfig   ApiConfig `json:"api_config"`
+	Secret      string    `json:"secret"`
+	WebUrl      string    `json:"web_url"`
 }
 
 var ConfigContext Config
@@ -58,6 +60,8 @@ var DefaultConfig = Config{
 		Port: "1314",
 		Mode: "release",
 	},
+	Secret: "changeme",
+	WebUrl: "https://example.com",
 }
 
 func Init() {
