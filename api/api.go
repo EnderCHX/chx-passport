@@ -16,6 +16,8 @@ func RunApi() {
 	log.Println("Starting API on http://" + host + ":" + port)
 	r := gin.Default()
 
+	r.Use(middleware.Cors()) // 允许跨域
+
 	r.GET("/", func(c *gin.Context) {
 		c.String(200, "Caillo World!")
 	})
