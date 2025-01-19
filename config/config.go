@@ -28,12 +28,17 @@ type ApiConfig struct {
 	Mode string `json:"mode"`
 }
 
+type SecretKeys struct {
+	RefreshSecret string `json:"refresh_secret"`
+	AccessSecret  string `json:"access_secret"`
+	PasswdSecret  string `json:"passwd_secret"`
+}
+
 type Config struct {
-	MySQLConfig MySQL     `json:"mysql_config"`
-	RedisConfig Redis     `json:"redis_config"`
-	ApiConfig   ApiConfig `json:"api_config"`
-	Secret      string    `json:"secret"`
-	WebUrl      string    `json:"web_url"`
+	MySQLConfig MySQL      `json:"mysql_config"`
+	RedisConfig Redis      `json:"redis_config"`
+	ApiConfig   ApiConfig  `json:"api_config"`
+	SecretKeys  SecretKeys `json:"secret_keys"`
 }
 
 var ConfigContext Config
@@ -60,8 +65,11 @@ var DefaultConfig = Config{
 		Port: "1314",
 		Mode: "release",
 	},
-	Secret: "changeme",
-	WebUrl: "https://example.com",
+	SecretKeys: SecretKeys{
+		RefreshSecret: "refresh_secret",
+		AccessSecret:  "access_secret",
+		PasswdSecret:  "passwd_secret",
+	},
 }
 
 func Init() {

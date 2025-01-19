@@ -54,5 +54,5 @@ func InitDB() {
 		log.Println(err)
 		return
 	}
-	log.Println("Redis连接成功", pong)
+	log.Println("Redis:", pong)
 }

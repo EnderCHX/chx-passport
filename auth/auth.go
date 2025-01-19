@@ -13,14 +13,12 @@ type JWTPayload struct {
 	jwt.RegisteredClaims
 }
 
-func GetToken(u user.User, secretKey string) (string, error) {
+func GetToken(u user.User, secretKey string, expiresAt time.Duration) (string, error) {
 	jwtPayload := JWTPayload{
-		UserID:   u.ID,
 		Username: u.Username,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 30)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiresAt)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			NotBefore: jwt.NewNumericDate(time.Now()),
 			Issuer:    "chxc.cc",
 		},
 	}

@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var url string = config.ConfigContext.WebUrl
+var url string = "https://chxc.cc"
 
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -21,7 +21,7 @@ func Auth() gin.HandlerFunc {
 			return
 		}
 		token = strings.Replace(token, "Bearer ", "", 1)
-		claims, err := auth.VerifyToken(token, config.ConfigContext.Secret)
+		claims, err := auth.VerifyToken(token, config.ConfigContext.SecretKeys.RefreshSecret)
 		if err != nil {
 			c.Redirect(http.StatusTemporaryRedirect, url+"/")
 			c.Abort()
