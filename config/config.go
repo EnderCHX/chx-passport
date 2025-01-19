@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 )
@@ -88,4 +89,5 @@ func Init() {
 		return
 	}
 	log.Println("读取配置文件成功")
+	fmt.Println(ConfigContext)
 }

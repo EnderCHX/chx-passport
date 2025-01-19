@@ -10,20 +10,26 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var url string = "https://chxc.cc"
-
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.GetHeader("Authorization")
 		if token == "" {
-			c.Redirect(http.StatusTemporaryRedirect, url+"/login")
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"message": "Authorization header is empty",
+				"code":    "InvalidAuthorizationHeader",
+				"data":    nil,
+			})
 			c.Abort()
 			return
 		}
 		token = strings.Replace(token, "Bearer ", "", 1)
-		claims, err := auth.VerifyToken(token, config.ConfigContext.SecretKeys.RefreshSecret)
+		claims, err := auth.VerifyToken(token, config.ConfigContext.SecretKeys.AccessSecret)
 		if err != nil {
-			c.Redirect(http.StatusTemporaryRedirect, url+"/")
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"message": err,
+				"code":    "InvalidAccessToken",
+				"data":    nil,
+			})
 			c.Abort()
 			return
 		} else {
@@ -35,13 +41,17 @@ func Auth() gin.HandlerFunc {
 
 func ShowUserInfo() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		claims, ok := c.Get("claims")
-		if !ok {
-			log.Println("Claims not found in context")
-			c.Next()
+		token := c.GetHeader("Authorization")
+		if token == "" {
+			log.Println("User : Guest", c.Request.RemoteAddr, "from", c.Request.RequestURI, "is visiting", c.Request.URL.Path)
 		} else {
-			username := claims.(*auth.JWTPayload).Username
-			log.Println("User :", username, c.Request.RemoteAddr, "from", c.Request.RequestURI, "is visiting", c.Request.URL.Path)
+			token = strings.Replace(token, "Bearer ", "", 1)
+			claims, err := auth.VerifyToken(token, config.ConfigContext.SecretKeys.AccessSecret)
+			if err != nil {
+				log.Println("User : Guest", c.Request.RemoteAddr, "from", c.Request.RequestURI, "is visiting", c.Request.URL.Path)
+			} else {
+				log.Println("User : ", claims.Username, c.Request.RemoteAddr, "from", c.Request.RequestURI, "is visiting", c.Request.URL.Path)
+			}
 		}
 
 		c.Next()

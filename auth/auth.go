@@ -8,7 +8,6 @@ import (
 )
 
 type JWTPayload struct {
-	UserID   int    `json:"user_id"`
 	Username string `json:"username"`
 	jwt.RegisteredClaims
 }
@@ -29,7 +28,8 @@ func GetToken(u user.User, secretKey string, expiresAt time.Duration) (string, e
 }
 
 func VerifyToken(tokenString string, secretKey string) (*JWTPayload, error) {
-	t, err := jwt.ParseWithClaims(tokenString, &JWTPayload{}, func(token *jwt.Token) (interface{}, error) {
+	claims := &JWTPayload{}
+	t, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secretKey), nil
 	})
 

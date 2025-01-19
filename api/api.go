@@ -16,7 +16,7 @@ func RunApi() {
 	log.Println("Starting API on http://" + host + ":" + port)
 	r := gin.Default()
 
-	r.Use(middleware.Cors()) // 允许跨域
+	r.Use(middleware.Cors()).Use(middleware.ShowUserInfo()) // 允许跨域
 
 	r.GET("/", func(c *gin.Context) {
 		c.String(200, "Caillo World!")
@@ -30,9 +30,12 @@ func RunApi() {
 	r.POST("/register", controller.Register)
 	r.POST("/login", controller.Login)
 
-	needLoginGroup := r.Group("/user/:username", middleware.Auth(), middleware.ShowUserInfo())
+	r.POST("/refresh", controller.RefreshToken)
+
+	needLoginGroup := r.Group("/user", middleware.Auth())
 	{
 		needLoginGroup.GET("/info", controller.UserInfo)
+		needLoginGroup.POST("/change_info", controller.ChangeInfo)
 		// needLoginGroup.POST("/update", controller.UpdateUserInfo)
 	}
 

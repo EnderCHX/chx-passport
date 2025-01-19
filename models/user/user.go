@@ -26,6 +26,7 @@ type UserReqBody struct {
 	Username     string `json:"username"`
 	Password     string `json:"password"`
 	Email        string `json:"email"`
+	CustomConfig string `json:"custom_config"`
 	ChangePwdOld string `json:"change_pwd_old"`
 	ChangePwdNew string `json:"change_pwd_new"`
 }
@@ -107,6 +108,7 @@ func (u *User) PasswordCheck() bool {
 	if err != nil {
 		return false
 	}
+
 	if !u.passwordEncrypted {
 		u.PasswordEncrypt()
 	}
@@ -116,12 +118,12 @@ func (u *User) Update() error {
 	if !u.passwordEncrypted {
 		u.PasswordEncrypt()
 	}
-	return database.MySQL.Save(u).Error
+	return database.MySQL.Model(u).Updates(u).Error
 }
 func (u *User) Delete() error {
 	u.Deleted = true
 	u.DeletedAt = time.Now()
-	return database.MySQL.Save(u).Error
+	return database.MySQL.Model(u).Updates(u).Error
 }
 
 func (u *User) SelectEmail() *User {
