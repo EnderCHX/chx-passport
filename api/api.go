@@ -4,19 +4,21 @@ import (
 	"chx-passport/api/middleware"
 	"chx-passport/config"
 	"chx-passport/controller"
-	"log"
+	"chx-passport/utils/log"
 
 	"github.com/gin-gonic/gin"
 )
 
 func RunApi() {
+	log.Setup("./log.log", "debug")
+	logger := log.GetLogger()
 	gin.SetMode(config.ConfigContext.ApiConfig.Mode)
 	host := config.ConfigContext.ApiConfig.Host
 	port := config.ConfigContext.ApiConfig.Port
-	log.Println("Starting API on http://" + host + ":" + port)
-	r := gin.Default()
+	logger.Info("Starting API on http://" + host + ":" + port)
+	r := gin.New()
 
-	r.Use(middleware.Cors()).Use(middleware.ShowUserInfo()) // 允许跨域
+	r.Use(log.GinZapLogger(), gin.Recovery(), middleware.Cors()) // 允许跨域
 
 	r.GET("/", func(c *gin.Context) {
 		c.String(200, "Caillo World!")

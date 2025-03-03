@@ -37,11 +37,10 @@ func InitDB() {
 	}
 	log.Println("数据库连接成功")
 
-	// err = MySQL.AutoMigrate(&models.ModelsList.User)
-	// //创建表
-	// if err != nil {
-	// 	log.Println(err)
-	// }
+	//创建表
+	if err != nil {
+		log.Println(err)
+	}
 
 	Rdb = redis.NewClient(&redis.Options{
 		Addr:     config.ConfigContext.RedisConfig.Host + ":" + config.ConfigContext.RedisConfig.Port,

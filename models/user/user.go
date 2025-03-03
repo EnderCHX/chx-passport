@@ -11,21 +11,35 @@ import (
 
 type User struct {
 	Username          string `json:"username" gorm:"primaryKey"`
-	Password          string `json:"password"`
+	Password          string `json:"password" gorm:"not null"`
 	passwordEncrypted bool
-	Email             string    `json:"email" gorm:"unique;index"`
-	Role              string    `json:"role"`
-	CreatedAt         time.Time `json:"created_at"`
-	UpdatedAt         time.Time `json:"updated_at"`
-	DeletedAt         time.Time `json:"deleted_at"`
-	Deleted           bool      `json:"deleted"`
-	CustomConfig      string    `json:"custom_config"`
+	Email             string `json:"email" gorm:"unique;index;not null"`
+	Role              string `json:"role" gorm:"not null"`
+	Avatar            string `json:"avatar" gorm:"not null"`
+	Signature         string `json:"signature"`
+
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	DeletedAt    time.Time `json:"deleted_at"`
+	Deleted      bool      `json:"deleted"`
+	CustomConfig string    `json:"custom_config"`
 }
 
+var (
+	RoleAdmin  = "admin"
+	RoleEditor = "editor"
+	RoleAUTHOR = "author"
+	RoleUser   = "user"
+	RoleGuest  = "guest"
+)
+
 type UserReqBody struct {
-	Username     string `json:"username"`
-	Password     string `json:"password"`
-	Email        string `json:"email"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	Email     string `json:"email"`
+	Avatar    string `json:"avatar"`
+	Signature string `json:"signature"`
+
 	CustomConfig string `json:"custom_config"`
 	ChangePwdOld string `json:"change_pwd_old"`
 	ChangePwdNew string `json:"change_pwd_new"`
@@ -35,13 +49,13 @@ var (
 	RoleList = []string{"admin", "user"}
 )
 
-func NewUser(username, password, email string, role int) *User {
+func NewUser(username, password, email string, role string) *User {
 	return &User{
 		Username:          username,
 		Password:          tools.Sha256(password),
 		passwordEncrypted: false,
 		Email:             email,
-		Role:              RoleList[role],
+		Role:              role,
 		CreatedAt:         time.Now(),
 		UpdatedAt:         time.Now(),
 		Deleted:           false,
@@ -143,6 +157,30 @@ func (u *User) SelectRole() *User {
 		return u
 	}
 	err := database.MySQL.Select("role").Where("username = ?", u.Username).First(u).Error
+	if err != nil {
+		log.Println(err)
+	}
+	u.passwordEncrypted = true
+	return u
+}
+
+func (u *User) SelectAvatar() *User {
+	if u.Username == "" {
+		return u
+	}
+	err := database.MySQL.Select("avatar").Where("username = ?", u.Username).First(u).Error
+	if err != nil {
+		log.Println(err)
+	}
+	u.passwordEncrypted = true
+	return u
+}
+
+func (u *User) SelectSignature() *User {
+	if u.Username == "" {
+		return u
+	}
+	err := database.MySQL.Select("signature").Where("username = ?", u.Username).First(u).Error
 	if err != nil {
 		log.Println(err)
 	}

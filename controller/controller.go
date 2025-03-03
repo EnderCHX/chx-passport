@@ -18,9 +18,9 @@ func Register(c *gin.Context) {
 
 	if userreqbody.Username == "" || userreqbody.Password == "" || userreqbody.Email == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "用户名、密码、邮箱不能为空",
-			"data":    nil,
-			"code":    "InvalidParameter",
+			"msg":  "用户名、密码、邮箱不能为空",
+			"data": nil,
+			"code": "InvalidParameter",
 		})
 		return
 	}
@@ -30,9 +30,9 @@ func Register(c *gin.Context) {
 
 	if !match {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "用户名只能包含字母、数字和下划线",
-			"code":    "InvalidUsername",
-			"data":    nil,
+			"msg":  "用户名只能包含字母、数字和下划线",
+			"code": "InvalidUsername",
+			"data": nil,
 		})
 		return
 	}
@@ -42,18 +42,18 @@ func Register(c *gin.Context) {
 
 	if !match {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "邮箱格式不正确",
-			"code":    "InvalidEmail",
-			"data":    nil,
+			"msg":  "邮箱格式不正确",
+			"code": "InvalidEmail",
+			"data": nil,
 		})
 		return
 	}
 
 	if len(userreqbody.Password) < 6 {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "密码长度不能小于6位",
-			"code":    "InvalidPassword",
-			"data":    nil,
+			"msg":  "密码长度不能小于6位",
+			"code": "InvalidPassword",
+			"data": nil,
 		})
 		return
 	}
@@ -62,15 +62,24 @@ func Register(c *gin.Context) {
 		userreqbody.Username,
 		"",
 		userreqbody.Email,
-		1,
+		user.RoleUser,
 	)
 	_user.Password = userreqbody.Password
+
+	if userreqbody.Avatar == "" {
+		_user.Avatar = "https://www.gravatar.com/avatar/" + strings.ToLower(strings.TrimSpace(userreqbody.Email))
+	}
+
+	if userreqbody.Signature == "" {
+		_user.Signature = "系统原装签名！"
+	}
+
 	err := _user.Insert()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "用户名或邮箱已存在",
-			"code":    "UserAlreadyExists",
-			"data":    nil,
+			"msg":  "用户名或邮箱已存在",
+			"code": "UserAlreadyExists",
+			"data": nil,
 		})
 		return
 	}
@@ -79,8 +88,8 @@ func Register(c *gin.Context) {
 	access_token, _ := auth.GetToken(*_user, config.ConfigContext.SecretKeys.AccessSecret, time.Hour)
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "注册成功",
-		"code":    "Success",
+		"msg":  "注册成功",
+		"code": "Success",
 		"data": gin.H{
 			"refresh_token": refresh_token,
 			"access_token":  access_token,
@@ -95,27 +104,29 @@ func Login(c *gin.Context) {
 
 	if _user.Username == "" || _user.Password == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "用户名、密码不能为空",
-			"code":    "InvalidParameter",
-			"data":    nil,
+			"msg":  "用户名、密码不能为空",
+			"code": "InvalidParameter",
+			"data": nil,
 		})
 		return
 	}
 
 	if !_user.PasswordCheck() {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "用户名或密码不正确",
-			"code":    "IncorrectUserNamweOrPassword",
-			"data":    nil,
+			"msg":  "用户名或密码不正确",
+			"code": "IncorrectUserNamweOrPassword",
+			"data": nil,
 		})
 		return
 	}
 
+	_user.SelectRole().SelectAvatar().SelectSignature()
+
 	refresh_token, _ := auth.GetToken(*_user, config.ConfigContext.SecretKeys.RefreshSecret, time.Hour*24*30)
 	access_token, _ := auth.GetToken(*_user, config.ConfigContext.SecretKeys.AccessSecret, time.Hour)
 	c.JSON(http.StatusOK, gin.H{
-		"message": "登录成功",
-		"code":    "Success",
+		"msg":  "登录成功",
+		"code": "Success",
 		"data": gin.H{
 			"access_token":  access_token,
 			"refresh_token": refresh_token,
@@ -128,11 +139,11 @@ func UserInfo(c *gin.Context) {
 	_user := user.User{
 		Username: claims.(*auth.JWTPayload).Username,
 	}
-	_user.SelectCreatedAt().SelectCustomConfig().SelectDeleted().SelectEmail().SelectRole()
+	_user.SelectCreatedAt().SelectCustomConfig().SelectDeleted().SelectEmail().SelectRole().SelectAvatar().SelectSignature()
 	c.JSON(http.StatusOK, gin.H{
-		"message": "User information retrieved successfully",
-		"code":    "Success",
-		"data":    _user,
+		"msg":  "User information retrieved successfully",
+		"code": "Success",
+		"data": _user,
 	})
 }
 
@@ -146,18 +157,18 @@ func ChangeInfo(c *gin.Context) {
 
 	if !match {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "邮箱格式不正确",
-			"code":    "InvalidEmail",
-			"data":    nil,
+			"msg":  "邮箱格式不正确",
+			"code": "InvalidEmail",
+			"data": nil,
 		})
 		return
 	}
 
 	if len(uqb.ChangePwdNew) < 6 {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "密码长度不能小于6位",
-			"code":    "InvalidPassword",
-			"data":    nil,
+			"msg":  "密码长度不能小于6位",
+			"code": "InvalidPassword",
+			"data": nil,
 		})
 		return
 	}
@@ -171,16 +182,16 @@ func ChangeInfo(c *gin.Context) {
 	err := _user.Update()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "邮箱已存在",
-			"code":    "UserAlreadyExists",
-			"data":    nil,
+			"msg":  "邮箱已存在",
+			"code": "UserAlreadyExists",
+			"data": nil,
 		})
 		return
 	} else {
 		c.JSON(http.StatusOK, gin.H{
-			"message": "修改成功",
-			"code":    "Success",
-			"data":    nil,
+			"msg":  "修改成功",
+			"code": "Success",
+			"data": nil,
 		})
 	}
 
@@ -196,9 +207,9 @@ func RefreshToken(c *gin.Context) {
 
 	if rt.RefreshToken == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Refresh token cannot be empty",
-			"code":    "InvalidParameter",
-			"data":    nil,
+			"msg":  "Refresh token cannot be empty",
+			"code": "InvalidParameter",
+			"data": nil,
 		})
 		return
 	}
@@ -206,24 +217,24 @@ func RefreshToken(c *gin.Context) {
 	claims, err := auth.VerifyToken(rt.RefreshToken, config.ConfigContext.SecretKeys.RefreshSecret)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"message": err,
-			"code":    "InvalidRefreshToken",
-			"data":    nil,
+			"msg":  err,
+			"code": "InvalidRefreshToken",
+			"data": nil,
 		})
 		return
 	}
 	accessToken, err := auth.GetToken(user.User{Username: claims.Username}, config.ConfigContext.SecretKeys.AccessSecret, time.Hour)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": err,
-			"code":    "InternalServerError",
-			"data":    nil,
+			"msg":  err,
+			"code": "InternalServerError",
+			"data": nil,
 		})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Refresh token successful",
-		"code":    "Success",
+		"msg":  "Refresh token successful",
+		"code": "Success",
 		"data": gin.H{
 			"access_token": accessToken,
 		},
@@ -236,16 +247,16 @@ func VerifyAccessToken(c *gin.Context) {
 	claims, err := auth.VerifyToken(accessToken, config.ConfigContext.SecretKeys.AccessSecret)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"message": err,
-			"code":    "InvalidAccessToken",
-			"data":    nil,
+			"msg":  err,
+			"code": "InvalidAccessToken",
+			"data": nil,
 		})
 		return
 	} else {
 		c.JSON(http.StatusOK, gin.H{
-			"message": "Access token verified",
-			"code":    "Success",
-			"data":    claims,
+			"msg":  "Access token verified",
+			"code": "Success",
+			"data": claims,
 		})
 	}
 }
