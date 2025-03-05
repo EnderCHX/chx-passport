@@ -17,7 +17,7 @@ func Register(c *gin.Context) {
 	c.BindJSON(&userreqbody)
 
 	if userreqbody.Username == "" || userreqbody.Password == "" || userreqbody.Email == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"msg":  "用户名、密码、邮箱不能为空",
 			"data": nil,
 			"code": "InvalidParameter",
@@ -29,7 +29,7 @@ func Register(c *gin.Context) {
 	match, _ := regexp.MatchString(pattern, userreqbody.Username)
 
 	if !match {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"msg":  "用户名只能包含字母、数字和下划线",
 			"code": "InvalidUsername",
 			"data": nil,
@@ -41,7 +41,7 @@ func Register(c *gin.Context) {
 	match, _ = regexp.MatchString(pattern, userreqbody.Email)
 
 	if !match {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"msg":  "邮箱格式不正确",
 			"code": "InvalidEmail",
 			"data": nil,
@@ -50,7 +50,7 @@ func Register(c *gin.Context) {
 	}
 
 	if len(userreqbody.Password) < 6 {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"msg":  "密码长度不能小于6位",
 			"code": "InvalidPassword",
 			"data": nil,
@@ -76,7 +76,7 @@ func Register(c *gin.Context) {
 
 	err := _user.Insert()
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"msg":  "用户名或邮箱已存在",
 			"code": "UserAlreadyExists",
 			"data": nil,
@@ -103,7 +103,7 @@ func Login(c *gin.Context) {
 	_user := uqb.ToUser()
 
 	if _user.Username == "" || _user.Password == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"msg":  "用户名、密码不能为空",
 			"code": "InvalidParameter",
 			"data": nil,
@@ -112,7 +112,7 @@ func Login(c *gin.Context) {
 	}
 
 	if !_user.PasswordCheck() {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"msg":  "用户名或密码不正确",
 			"code": "IncorrectUserNamweOrPassword",
 			"data": nil,
@@ -156,7 +156,7 @@ func ChangeInfo(c *gin.Context) {
 	match, _ := regexp.MatchString(pattern, uqb.Email)
 
 	if !match {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"msg":  "邮箱格式不正确",
 			"code": "InvalidEmail",
 			"data": nil,
@@ -165,7 +165,7 @@ func ChangeInfo(c *gin.Context) {
 	}
 
 	if len(uqb.ChangePwdNew) < 6 {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"msg":  "密码长度不能小于6位",
 			"code": "InvalidPassword",
 			"data": nil,
@@ -181,7 +181,7 @@ func ChangeInfo(c *gin.Context) {
 	}
 	err := _user.Update()
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"msg":  "邮箱已存在",
 			"code": "UserAlreadyExists",
 			"data": nil,
@@ -206,7 +206,7 @@ func RefreshToken(c *gin.Context) {
 	c.Bind(&rt)
 
 	if rt.RefreshToken == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"msg":  "Refresh token cannot be empty",
 			"code": "InvalidParameter",
 			"data": nil,
@@ -216,7 +216,7 @@ func RefreshToken(c *gin.Context) {
 
 	claims, err := auth.VerifyToken(rt.RefreshToken, config.ConfigContext.SecretKeys.RefreshSecret)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"msg":  err,
 			"code": "InvalidRefreshToken",
 			"data": nil,
@@ -225,7 +225,7 @@ func RefreshToken(c *gin.Context) {
 	}
 	accessToken, err := auth.GetToken(user.User{Username: claims.Username}, config.ConfigContext.SecretKeys.AccessSecret, time.Hour)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"msg":  err,
 			"code": "InternalServerError",
 			"data": nil,
@@ -246,7 +246,7 @@ func VerifyAccessToken(c *gin.Context) {
 	accessToken = strings.Replace(accessToken, "Bearer ", "", 1)
 	claims, err := auth.VerifyToken(accessToken, config.ConfigContext.SecretKeys.AccessSecret)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"msg":  err,
 			"code": "InvalidAccessToken",
 			"data": nil,

@@ -14,7 +14,7 @@ func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.GetHeader("Authorization")
 		if token == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{
+			c.JSON(http.StatusOK, gin.H{
 				"msg":  "Authorization header is empty",
 				"code": "InvalidAuthorizationHeader",
 				"data": nil,
@@ -25,7 +25,7 @@ func Auth() gin.HandlerFunc {
 		token = strings.Replace(token, "Bearer ", "", 1)
 		claims, err := auth.VerifyToken(token, config.ConfigContext.SecretKeys.AccessSecret)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{
+			c.JSON(http.StatusOK, gin.H{
 				"msg":  err,
 				"code": "InvalidAccessToken",
 				"data": nil,
