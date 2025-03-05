@@ -26,11 +26,11 @@ type User struct {
 }
 
 var (
-	RoleAdmin  = "admin"
-	RoleEditor = "editor"
-	RoleAUTHOR = "author"
-	RoleUser   = "user"
-	RoleGuest  = "guest"
+	RoleAdmin  = "ADMIN"
+	RoleEditor = "EDITOR"
+	RoleAUTHOR = "AUTHOR"
+	RoleUser   = "USER"
+	RoleGuest  = "GUEST"
 )
 
 type UserReqBody struct {
