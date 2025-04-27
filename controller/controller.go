@@ -223,7 +223,12 @@ func RefreshToken(c *gin.Context) {
 		})
 		return
 	}
-	accessToken, err := auth.GetToken(user.User{Username: claims.Username}, config.ConfigContext.SecretKeys.AccessSecret, time.Hour)
+	_user := user.User{
+		Username: claims.Username,
+	}
+	_user.SelectRole().SelectAvatar().SelectSignature()
+	accessToken, err := auth.GetToken(_user, config.ConfigContext.SecretKeys.AccessSecret, time.Hour)
+
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"msg":  err,
